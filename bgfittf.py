@@ -41,7 +41,7 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
         train_step = minimizer.minimize(error)
 
         with tf.Session() as session:
-            session.run(tf.initialize_all_variables())
+            session.run(tf.global_variables_initializer())
             for epoch in range(epochs):
                 data = {freq: freq_filt,
                         powerden: powerden_filt}
