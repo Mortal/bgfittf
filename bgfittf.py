@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
@@ -26,7 +27,7 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
     return popt
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=2e-4, epochs=1000, batch_size=1024):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=2e-4, epochs=1000, batch_size=1024, plot_cb=None):
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
         powerden = tf.placeholder(tf.float32, (None,), 'powerden')
@@ -68,10 +69,30 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=2e-4, epoch
                         powerden: powerden_filt}
                 e = session.run(error, feed_dict=data)
                 params = session.run([sigma_0, tau_0, sigma_1, tau_1])
+                if plot_cb:
+                    plot_cb(freq_filt, powerden_filt,
+                            lambda x: session.run(bgfit, feed_dict={freq: x}),
+                            epoch, e, params)
                 print('[%4d] err=%.3e params=%s' % (epoch, e, params))
                 if not np.all(np.isfinite(params)):
                     raise Exception("Non-finite parameter")
             return params
+
+
+def plotter(freq_filt, powerden_filt, npoints=1000):
+    fmin, fmax = np.min(freq_filt), np.max(freq_filt)
+    xs = np.linspace(fmin, fmax, npoints)
+    ys = np.zeros_like(xs) + np.median(powerden_filt)
+    ind = np.random.permutation(len(freq_filt))[:npoints]
+    fig = plt.figure()  # type: plt.Figure
+    ax = fig.add_subplot(111)  # type: plt.Axes
+    data_line = ax.plot(freq_filt[ind], powerden_filt[ind], ',')  # type: plt.Line2D
+    model_line = ax.plot(xs, ys)  # type: plt.Line2D
+
+    def plot_cb(freq_filt, powerden_filt, bgfit, epoch, e, params):
+        model_line.set_ydata(bgfit(xs))
+
+    return plot_cb
 
 
 def main():
@@ -86,7 +107,8 @@ def main():
     print('Shape of freq:', freq_filt.shape)
     print('Shape of powerden:', powerden_filt.shape)
     print('Initial parameters:', initial_params)
-    tensorflow_optimizer(freq_filt, powerden_filt, initial_params)
+    plot_cb = plotter(freq_filt, powerden_filt)
+    tensorflow_optimizer(freq_filt, powerden_filt, initial_params, plot_cb=plot_cb)
 
 
 if __name__ == '__main__':
