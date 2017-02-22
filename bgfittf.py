@@ -22,7 +22,8 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
 
     popt, pcov = curve_fit(logbackground_fit, freq_filt,
                            np.log10(powerden_filt), p0=z0)
-    print('The best parameters are', popt)
+    print('curve_fit returned parameters:', popt)
+    return popt
 
 
 def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epochs=1000, batch_size=1024):
