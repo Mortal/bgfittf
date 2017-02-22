@@ -69,11 +69,13 @@ def main():
     data = np.load(filename)
     freq_filt = data['arr_0']
     powerden_filt = data['arr_1']
-    z0 = data['arr_2']
+    initial_params = data['arr_2']
+    initial_params[0] *= 0.8
+    initial_params[2] *= 1.2
     print('Shape of freq:', freq_filt.shape)
     print('Shape of powerden:', powerden_filt.shape)
-    print('Initial parameters:', z0)
-    tensorflow_optimizer(freq_filt, powerden_filt, z0)
+    print('Initial parameters:', initial_params)
+    tensorflow_optimizer(freq_filt, powerden_filt, initial_params)
 
 
 if __name__ == '__main__':
