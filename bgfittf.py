@@ -36,6 +36,7 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
         tau_0 = tf.Variable(tf.constant(z0[1], tf.float32))
         sigma_1 = tf.Variable(tf.constant(z0[2], tf.float32))
         tau_1 = tf.Variable(tf.constant(z0[3], tf.float32))
+        # Pass max(tau_limit, tau) into background_fit to avoid nan
         bgfit = background_fit(
             freq, sigma_0, tf.maximum(tau_limit, tau_0),
             sigma_1, tf.maximum(tau_limit, tau_1))
