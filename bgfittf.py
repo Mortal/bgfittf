@@ -26,7 +26,7 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
     return popt
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epochs=1000, batch_size=1024):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=2e-4, epochs=1000, batch_size=1024):
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
         powerden = tf.placeholder(tf.float32, (None,), 'powerden')
