@@ -84,6 +84,8 @@ def plotter(freq_filt, powerden_filt, npoints=1000):
     xs = np.linspace(fmin, fmax, npoints)
     ys = np.zeros_like(xs) + np.median(powerden_filt)
     ind = np.random.permutation(len(freq_filt))[:npoints]
+
+    plt.ion()
     fig = plt.figure()  # type: plt.Figure
     ax = fig.add_subplot(111)  # type: plt.Axes
     data_line = ax.plot(freq_filt[ind], powerden_filt[ind], ',')  # type: plt.Line2D
