@@ -36,7 +36,9 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
         bgfit = background_fit(freq, sigma_0, tau_0, sigma_1, tau_1)
         log_bgfit = tf.log(bgfit)
         log_powerden = tf.log(powerden)
-        error = tf.nn.l2_loss(log_bgfit - log_powerden)
+        tau_penalty = 1e6 * (tf.maximum(0.0, 5e-4 - tau_0) + tf.maximum(0.0, 5e-4 - tau_1))
+        error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
+        error += tau_penalty
         minimizer = tf.train.AdamOptimizer(learning_rate)
         train_step = minimizer.minimize(error)
 
