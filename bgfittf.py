@@ -37,11 +37,21 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=2e-4, epoch
         bgfit = background_fit(freq, sigma_0, tau_0, sigma_1, tau_1)
         log_bgfit = tf.log(bgfit)
         log_powerden = tf.log(powerden)
-        tau_penalty = 1e6 * (tf.maximum(0.0, 5e-4 - tau_0) + tf.maximum(0.0, 5e-4 - tau_1))
+
+        # Minimize distance squared
         error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
-        error += tau_penalty
+
+        # Regularization: Don't let tau be too close to 0.
+        tau_penalty_factor = 1e6
+        tau_penalty_limit = 0.5e-3
+        tau_penalty = (
+            tau_penalty_factor *
+            (tf.maximum(0.0, tau_penalty_limit - tau_0) +
+             tf.maximum(0.0, tau_penalty_limit - tau_1)))
+
+        minimization_goal = error + tau_penalty
         minimizer = tf.train.AdamOptimizer(learning_rate)
-        train_step = minimizer.minimize(error)
+        train_step = minimizer.minimize(minimization_goal)
 
         with tf.Session() as session:
             session.run(tf.global_variables_initializer())
