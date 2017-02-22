@@ -47,7 +47,9 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
                         powerden: powerden_filt}
                 _, e = session.run([train_step, error], feed_dict=data)
                 params = session.run([sigma_0, tau_0, sigma_1, tau_1])
-                print(epoch, e, params)
+                print('[%4d] err=%.3e params=%s' % (epoch, e, params))
+                if not np.all(np.isfinite(params)):
+                    raise Exception("Non-finite parameter")
             return params
 
 
@@ -58,9 +60,9 @@ def main():
     freq_filt = data['arr_0']
     powerden_filt = data['arr_1']
     z0 = data['arr_2']
-    print(freq_filt.shape)
-    print(powerden_filt.shape)
-    print(z0)
+    print('Shape of freq:', freq_filt.shape)
+    print('Shape of powerden:', powerden_filt.shape)
+    print('Initial parameters:', z0)
     tensorflow_optimizer(freq_filt, powerden_filt, z0)
 
 
