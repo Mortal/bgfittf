@@ -40,7 +40,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-1, epochs=1000, batch_size=2**10, plot_cb=None):
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-1, epochs=1000, batch_size=None, plot_cb=None):
     if data_weights is None:
         data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
