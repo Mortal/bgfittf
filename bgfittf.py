@@ -40,7 +40,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-1, epochs=1000, batch_size=None, plot_cb=None):
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-3, epochs=10000, batch_size=None, plot_cb=None):
     if data_weights is None:
         data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
@@ -65,10 +65,11 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
         log_powerden = tf.log(powerden)
 
         # Minimize weighted distance squared
+        #error = tf.reduce_sum(weights *
+        #                      (log_bgfit - log_powerden) ** 2) / total_weight
+        # Minimize weighted absolute distance
         error = tf.reduce_sum(weights *
-                              (log_bgfit - log_powerden) ** 2) / total_weight
-        # Minimize absolute distance
-        #error = tf.reduce_mean(tf.abs(log_bgfit - log_powerden))
+                              tf.abs(log_bgfit - log_powerden)) / total_weight
 
         # Regularization: Don't let tau be too close to 0.
         tau_penalty_factor = 1e6
@@ -78,7 +79,7 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
              tf.maximum(0.0, tau_limit - tau_1)))
 
         minimization_goal = error + tau_penalty
-        minimizer = tf.train.GradientDescentOptimizer(learning_rate)
+        minimizer = tf.train.AdamOptimizer(learning_rate)
         train_step = minimizer.minimize(minimization_goal)
 
         with tf.Session() as session:
@@ -159,8 +160,9 @@ def plotter(freq, powerden, npoints=10000):
     plt.pause(1e-3)
 
     def plot_cb(freq, powerden, bgfit, epoch, e, params):
-        model_line.set_ydata(np.log10(bgfit(xs)))
-        plt.pause(1e-3)
+        if epoch % 100 == 0:
+            model_line.set_ydata(np.log10(bgfit(xs)))
+            plt.pause(1e-3)
 
     return plot_cb
 
