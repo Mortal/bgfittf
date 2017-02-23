@@ -30,7 +30,7 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
 
 def display_params(params):
     sigma0, tau0, sigma1, tau1 = params
-    return '%s=%.4e %s=%.4e %s=%.4e %s=%.4e' % (
+    return '%s=%.3e %s=%.3e %s=%.3e %s=%.3e' % (
         '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}', sigma0,
         '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}', tau0,
         '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}', sigma1,
