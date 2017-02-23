@@ -38,7 +38,7 @@ def display_params(params):
     )
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epochs=1000, batch_size=None, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epochs=1000, batch_size=2**8, plot_cb=None):
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
@@ -51,6 +51,8 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
         bgfit = background_fit(
             freq, sigma_0, tf.maximum(tau_limit/2, tau_0),
             sigma_1, tf.maximum(tau_limit/2, tau_1))
+        # Note we use the natural log here on both data and model
+        # (but this is just for minimization; plotting still uses log10).
         log_bgfit = tf.log(bgfit)
         log_powerden = tf.log(powerden)
 
