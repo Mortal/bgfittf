@@ -29,7 +29,7 @@ def scipy_optimizer(freq_filt, powerden_filt, z0, data_weights=None, plot_cb=Non
 
     popt, pcov = curve_fit(logbackground_fit, freq_filt,
                            np.log10(powerden_filt), p0=z0)
-    print('curve_fit returned parameters:', popt)
+    print('curve_fit returned parameters:', display_params(popt))
     return popt
 
 
@@ -42,10 +42,10 @@ def display_params(params):
         'P_n',
     ]
     kvs = zip(variable_names, params)
-    return ' '.join('%s=%.3e' % kv for kv in kvs)
+    return ' '.join('%s=%+.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-4, epochs=10000, batch_size=None, plot_cb=None):
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-4, epochs=2000, batch_size=None, plot_cb=None):
     if data_weights is None:
         data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
@@ -120,8 +120,9 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
                             epoch, err, params)
                 t2 = time.time()
                 time_per_epoch = (t2 - t1) / (epoch + 1)
-                print('[%4d] t=%5.2f err=%.3e %s' %
-                      (epoch, time_per_epoch, err, display_params(params)))
+                if epoch % 100 == 0 or epoch + 1 == epochs:
+                    print('[%4d] t=%5.2f err=%.3e %s' %
+                          (epoch, time_per_epoch, err, display_params(params)))
                 if not np.all(np.isfinite(params)):
                     raise Exception("Non-finite parameter")
             return params
@@ -195,8 +196,9 @@ def main():
     print('Shape of freq:', freq2.shape)
     print('Shape of powerden:', powerden2.shape)
     print('Shape of weights:', weights2.shape)
-    tensorflow_optimizer(freq2, powerden2, popt, weights2,
-                         plot_cb=plotter(freq, powerden))
+    popt2 = tensorflow_optimizer(freq2, powerden2, popt, weights2,
+                                 plot_cb=plotter(freq, powerden))
+    print(popt2)
 
 
 if __name__ == '__main__':
