@@ -123,7 +123,7 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
 
 def running_mean(freq, powerden, weights=None, n=10000):
     if weights is None:
-        weights = np.ones(len(powerden_data), dtype=np.float32)
+        weights = np.ones(len(powerden), dtype=np.float32)
 
     sort_ind = np.indsort(freq)
     freq = freq[sort_ind]
