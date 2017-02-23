@@ -15,7 +15,7 @@ def background_fit_2(nu, sigma_0, tau_0):
 def background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n=0):
     k1 = background_fit_2(nu, sigma_0, tau_0)
     k2 = background_fit_2(nu, sigma_1, tau_1)
-    return P_n + k1 + k2
+    return P_n + k1 # + k2
 
 
 def scipy_optimizer(freq_filt, powerden_filt, z0):
