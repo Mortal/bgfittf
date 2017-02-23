@@ -40,7 +40,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epochs=1000, batch_size=2**8, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epochs=1000, batch_size=2**8, plot_cb=None):
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
@@ -49,7 +49,8 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epoch
         tau_0 = tf.Variable(tf.constant(z0[1], tf.float32))
         sigma_1 = tf.Variable(tf.constant(z0[2], tf.float32))
         tau_1 = tf.Variable(tf.constant(z0[3], tf.float32))
-        P_n = tf.Variable(tf.constant(0, tf.float32))
+        initial_P_n = np.exp(np.mean(np.log(powerden_filt)))
+        P_n = tf.Variable(tf.constant(initial_P_n, tf.float32))
         # Pass max(tau_limit/2, tau) into background_fit to avoid nan
         bgfit = background_fit(
             freq, sigma_0, tf.maximum(tau_limit/2, tau_0),
