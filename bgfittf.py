@@ -38,7 +38,7 @@ def display_params(params):
     )
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=2**10, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=None, plot_cb=None):
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
@@ -72,14 +72,19 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epoch
             session.run(tf.global_variables_initializer())
             t1 = time.time()
             for epoch in range(epochs):
-                perm = np.random.permutation(len(freq_filt))
-                freq_perm = freq_filt[perm]
-                powerden_perm = powerden_filt[perm]
-                for i in range(0, len(freq_filt), batch_size):
-                    j = min(i + batch_size, len(freq_filt))
-                    data = {freq: freq_perm[i:j],
-                            powerden: powerden_perm[i:j]}
+                if batch_size is None:
+                    data = {freq: freq_filt,
+                            powerden: powerden_filt}
                     session.run(train_step, feed_dict=data)
+                else:
+                    perm = np.random.permutation(len(freq_filt))
+                    freq_perm = freq_filt[perm]
+                    powerden_perm = powerden_filt[perm]
+                    for i in range(0, len(freq_filt), batch_size):
+                        j = min(i + batch_size, len(freq_filt))
+                        data = {freq: freq_perm[i:j],
+                                powerden: powerden_perm[i:j]}
+                        session.run(train_step, feed_dict=data)
                 data = {freq: freq_filt,
                         powerden: powerden_filt}
                 err = session.run(error, feed_dict=data)
