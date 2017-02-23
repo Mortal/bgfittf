@@ -40,7 +40,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-3, epochs=1000, batch_size=2**10, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=3e-4, epochs=1000, batch_size=2**10, plot_cb=None):
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
