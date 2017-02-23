@@ -18,9 +18,14 @@ def background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n=0):
     return P_n + k1 + k2
 
 
-def scipy_optimizer(freq_filt, powerden_filt, z0):
+def scipy_optimizer(freq_filt, powerden_filt, z0, data_weights=None, plot_cb=None):
     def logbackground_fit(nu, sigma_0, tau_0, sigma_1, tau_1):
-        return np.log10(background_fit(nu, sigma_0, tau_0, sigma_1, tau_1))
+        r = background_fit(nu, sigma_0, tau_0, sigma_1, tau_1)
+        inval = r <= 0
+        r[inval] = 1
+        lr = np.log10(r)
+        lr[inval] = -10000
+        return lr
 
     popt, pcov = curve_fit(logbackground_fit, freq_filt,
                            np.log10(powerden_filt), p0=z0)
@@ -40,7 +45,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-2, epochs=10000, batch_size=None, plot_cb=None):
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=1e-4, epochs=10000, batch_size=None, plot_cb=None):
     if data_weights is None:
         data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
@@ -179,12 +184,18 @@ def main():
     initial_params[2] *= 1.2
     print('Shape of freq:', freq.shape)
     print('Shape of powerden:', powerden.shape)
-    freq, powerden, weights = running_mean(freq, powerden)
-    print('Shape of freq:', freq.shape)
-    print('Shape of powerden:', powerden.shape)
-    print('Shape of weights:', weights.shape)
+    freq1, powerden1, weights1 = running_mean(freq, powerden, n=1000)
+    print('Shape of freq:', freq1.shape)
+    print('Shape of powerden:', powerden1.shape)
+    print('Shape of weights:', weights1.shape)
     print('Initial parameters:', display_params(initial_params))
-    tensorflow_optimizer(freq, powerden, initial_params, weights,
+    popt = scipy_optimizer(freq1, powerden1, initial_params, weights1,
+                           plot_cb=None)
+    freq2, powerden2, weights2 = running_mean(freq, powerden, n=10000)
+    print('Shape of freq:', freq2.shape)
+    print('Shape of powerden:', powerden2.shape)
+    print('Shape of weights:', weights2.shape)
+    tensorflow_optimizer(freq2, powerden2, popt, weights2,
                          plot_cb=plotter(freq, powerden))
 
 
