@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
     return popt
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epochs=1000, batch_size=1024, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=2**9, plot_cb=None):
     tau_limit = 0.5e-3
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
@@ -59,6 +60,7 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
 
         with tf.Session() as session:
             session.run(tf.global_variables_initializer())
+            t1 = time.time()
             for epoch in range(epochs):
                 perm = np.random.permutation(len(freq_filt))
                 freq_perm = freq_filt[perm]
@@ -76,16 +78,18 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
                     plot_cb(freq_filt, powerden_filt,
                             lambda x: session.run(bgfit, feed_dict={freq: x}),
                             epoch, e, params)
-                print('[%4d] err=%.3e params=%s' % (epoch, e, params))
+                t2 = time.time()
+                print('[%4d] t=%5.2f err=%.3e params=%s' %
+                      (epoch, (t2 - t1) / (epoch + 1), e, params))
                 if not np.all(np.isfinite(params)):
                     raise Exception("Non-finite parameter")
             return params
 
 
-def plotter(freq_filt, powerden_filt, npoints=1000):
+def plotter(freq_filt, powerden_filt, npoints=10000):
     fmin, fmax = np.min(freq_filt), np.max(freq_filt)
     xs = np.linspace(fmin, fmax, npoints)
-    ys = np.zeros_like(xs) + np.median(powerden_filt)
+    ys = np.zeros_like(xs) + np.min(powerden_filt)
     ind = np.random.permutation(len(freq_filt))[:npoints]
 
     plt.ion()
