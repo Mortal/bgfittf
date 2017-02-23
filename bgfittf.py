@@ -28,8 +28,18 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
     return popt
 
 
+def display_params(params):
+    sigma0, tau0, sigma1, tau1 = params
+    return '%s=%.4e %s=%.4e %s=%.4e %s=%.4e' % (
+        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}', sigma0,
+        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}', tau0,
+        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}', sigma1,
+        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ONE}', tau1,
+    )
+
+
 def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=2**9, plot_cb=None):
-    tau_limit = 0.5e-3
+    tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
         powerden = tf.placeholder(tf.float32, (None,), 'powerden')
@@ -72,15 +82,16 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epoch
                     session.run(train_step, feed_dict=data)
                 data = {freq: freq_filt,
                         powerden: powerden_filt}
-                e = session.run(error, feed_dict=data)
+                err = session.run(error, feed_dict=data)
                 params = session.run([sigma_0, tau_0, sigma_1, tau_1])
                 if plot_cb:
                     plot_cb(freq_filt, powerden_filt,
                             lambda x: session.run(bgfit, feed_dict={freq: x}),
-                            epoch, e, params)
+                            epoch, err, params)
                 t2 = time.time()
-                print('[%4d] t=%5.2f err=%.3e params=%s' %
-                      (epoch, (t2 - t1) / (epoch + 1), e, params))
+                time_per_epoch = (t2 - t1) / (epoch + 1)
+                print('[%4d] t=%5.2f err=%.3e %s' %
+                      (epoch, time_per_epoch, err, display_params(params)))
                 if not np.all(np.isfinite(params)):
                     raise Exception("Non-finite parameter")
             return params
@@ -117,10 +128,11 @@ def main():
     initial_params[2] *= 1.2
     print('Shape of freq:', freq_filt.shape)
     print('Shape of powerden:', powerden_filt.shape)
-    print('Initial parameters:', initial_params)
+    print('Initial parameters:', display_params(initial_params))
     plot_cb = plotter(freq_filt, powerden_filt)
     tensorflow_optimizer(freq_filt, powerden_filt, initial_params, plot_cb=plot_cb)
 
 
 if __name__ == '__main__':
     main()
+
