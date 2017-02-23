@@ -29,13 +29,15 @@ def scipy_optimizer(freq_filt, powerden_filt, z0):
 
 
 def display_params(params):
-    sigma0, tau0, sigma1, tau1 = params
-    return '%s=%.3e %s=%.3e %s=%.3e %s=%.3e' % (
-        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}', sigma0,
-        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}', tau0,
-        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}', sigma1,
-        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ONE}', tau1,
-    )
+    variable_names = [
+        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}',
+        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}',
+        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}',
+        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ONE}',
+        'P_n',
+    ]
+    kvs = zip(variable_names, params)
+    return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
 def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epochs=1000, batch_size=2**8, plot_cb=None):
@@ -47,19 +49,20 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epoch
         tau_0 = tf.Variable(tf.constant(z0[1], tf.float32))
         sigma_1 = tf.Variable(tf.constant(z0[2], tf.float32))
         tau_1 = tf.Variable(tf.constant(z0[3], tf.float32))
+        P_n = tf.Variable(tf.constant(0, tf.float32))
         # Pass max(tau_limit/2, tau) into background_fit to avoid nan
         bgfit = background_fit(
             freq, sigma_0, tf.maximum(tau_limit/2, tau_0),
-            sigma_1, tf.maximum(tau_limit/2, tau_1))
+            sigma_1, tf.maximum(tau_limit/2, tau_1), P_n)
         # Note we use the natural log here on both data and model
         # (but this is just for minimization; plotting still uses log10).
         log_bgfit = tf.log(bgfit)
         log_powerden = tf.log(powerden)
 
         # Minimize distance squared
-        #error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
+        error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
         # Minimize absolute distance
-        error = tf.reduce_mean(tf.abs(log_bgfit - log_powerden))
+        #error = tf.reduce_mean(tf.abs(log_bgfit - log_powerden))
 
         # Regularization: Don't let tau be too close to 0.
         tau_penalty_factor = 1e6
@@ -77,10 +80,12 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epoch
             t1 = time.time()
             for epoch in range(epochs):
                 if batch_size is None:
+                    # Old-fashioned batched gradient descent
                     data = {freq: freq_filt,
                             powerden: powerden_filt}
                     session.run(train_step, feed_dict=data)
                 else:
+                    # Mini-batch gradient descent
                     perm = np.random.permutation(len(freq_filt))
                     freq_perm = freq_filt[perm]
                     powerden_perm = powerden_filt[perm]
@@ -92,7 +97,7 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-5, epoch
                 data = {freq: freq_filt,
                         powerden: powerden_filt}
                 err = session.run(error, feed_dict=data)
-                params = session.run([sigma_0, tau_0, sigma_1, tau_1])
+                params = session.run([sigma_0, tau_0, sigma_1, tau_1, P_n])
                 if plot_cb:
                     plot_cb(freq_filt, powerden_filt,
                             lambda x: session.run(bgfit, feed_dict={freq: x}),
