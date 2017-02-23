@@ -40,14 +40,15 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, weights=None, learning_rate=3e-4, epochs=1000, batch_size=2**10, plot_cb=None):
-    if weights is None:
-        weights = np.ones(len(powerden_data), dtype=np.float32)
-    total_weight = np.sum(weights)
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=3e-4, epochs=1000, batch_size=2**10, plot_cb=None):
+    if data_weights is None:
+        data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
         powerden = tf.placeholder(tf.float32, (None,), 'powerden')
+        weights = tf.placeholder(tf.float32, (None,), 'weights')
+        total_weight = tf.reduce_sum(weights)
         sigma_0 = tf.Variable(tf.constant(z0[0], tf.float32))
         tau_0 = tf.Variable(tf.constant(z0[1], tf.float32))
         sigma_1 = tf.Variable(tf.constant(z0[2], tf.float32))
@@ -64,7 +65,7 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, weights=None, learning_ra
         log_powerden = tf.log(powerden)
 
         # Minimize weighted distance squared
-        error = tf.reduce_sum(tf.constant(weights) *
+        error = tf.reduce_sum(weights *
                               (log_bgfit - log_powerden) ** 2) / total_weight
         # Minimize absolute distance
         #error = tf.reduce_mean(tf.abs(log_bgfit - log_powerden))
@@ -87,20 +88,24 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, weights=None, learning_ra
                 if batch_size is None:
                     # Old-fashioned batched gradient descent
                     data = {freq: freq_data,
-                            powerden: powerden_data}
+                            powerden: powerden_data,
+                            weights: data_weights}
                     session.run(train_step, feed_dict=data)
                 else:
                     # Mini-batch gradient descent
                     perm = np.random.permutation(len(freq_data))
                     freq_perm = freq_data[perm]
                     powerden_perm = powerden_data[perm]
+                    weights_perm = data_weights[perm]
                     for i in range(0, len(freq_data), batch_size):
                         j = min(i + batch_size, len(freq_data))
                         data = {freq: freq_perm[i:j],
-                                powerden: powerden_perm[i:j]}
+                                powerden: powerden_perm[i:j],
+                                weights: weights_perm[i:j]}
                         session.run(train_step, feed_dict=data)
                 data = {freq: freq_data,
-                        powerden: powerden_data}
+                        powerden: powerden_data,
+                        weights: data_weights}
                 err = session.run(error, feed_dict=data)
                 params = session.run([sigma_0, tau_0, sigma_1, tau_1, P_n])
                 if plot_cb:
