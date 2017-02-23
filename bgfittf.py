@@ -38,7 +38,7 @@ def display_params(params):
     )
 
 
-def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=2**9, plot_cb=None):
+def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=5e-5, epochs=1000, batch_size=2**10, plot_cb=None):
     tau_limit = 1e-6
     with tf.Graph().as_default():
         freq = tf.placeholder(tf.float32, (None,), 'freq')
