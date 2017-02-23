@@ -125,7 +125,7 @@ def running_mean(freq, powerden, weights=None, n=10000):
     if weights is None:
         weights = np.ones(len(powerden), dtype=np.float32)
 
-    sort_ind = np.indsort(freq)
+    sort_ind = np.argsort(freq)
     freq = freq[sort_ind]
     powerden = powerden[sort_ind]
     weights = weights[sort_ind]
