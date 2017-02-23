@@ -78,7 +78,7 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
              tf.maximum(0.0, tau_limit - tau_1)))
 
         minimization_goal = error + tau_penalty
-        minimizer = tf.train.AdamOptimizer(learning_rate)
+        minimizer = tf.train.GradientDescentOptimizer(learning_rate)
         train_step = minimizer.minimize(minimization_goal)
 
         with tf.Session() as session:
