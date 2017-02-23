@@ -155,7 +155,7 @@ def plotter(freq, powerden, npoints=10000):
     fig = plt.figure()  # type: plt.Figure
     ax = fig.add_subplot(111)  # type: plt.Axes
     data_line, = ax.plot(freq[ind], np.log10(powerden[ind]), ',')  # type: plt.Line2D
-    model_line, = ax.plot(xs, np.log11(ys))  # type: plt.Line2D
+    model_line, = ax.plot(xs, np.log10(ys))  # type: plt.Line2D
     plt.pause(1e-3)
 
     def plot_cb(freq, powerden, bgfit, epoch, e, params):
