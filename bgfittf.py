@@ -15,7 +15,7 @@ def background_fit_2(nu, sigma_0, tau_0):
 def background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n=0):
     k1 = background_fit_2(nu, sigma_0, tau_0)
     k2 = background_fit_2(nu, sigma_1, tau_1)
-    return P_n + k1 # + k2
+    return P_n + k1 + k2
 
 
 def scipy_optimizer(freq_filt, powerden_filt, z0):
@@ -40,7 +40,7 @@ def display_params(params):
     return ' '.join('%s=%.3e' % kv for kv in kvs)
 
 
-def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=3e-4, epochs=1000, batch_size=2**10, plot_cb=None):
+def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learning_rate=3e-3, epochs=1000, batch_size=2**10, plot_cb=None):
     if data_weights is None:
         data_weights = np.ones(len(powerden_data), dtype=np.float32)
     tau_limit = 1e-6
