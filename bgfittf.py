@@ -55,7 +55,9 @@ def tensorflow_optimizer(freq_filt, powerden_filt, z0, learning_rate=1e-4, epoch
         log_powerden = tf.log(powerden)
 
         # Minimize distance squared
-        error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
+        #error = tf.reduce_mean((log_bgfit - log_powerden) ** 2)
+        # Minimize absolute distance
+        error = tf.reduce_mean(tf.abs(log_bgfit - log_powerden))
 
         # Regularization: Don't let tau be too close to 0.
         tau_penalty_factor = 1e6
