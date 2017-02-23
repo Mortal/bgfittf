@@ -121,6 +121,30 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
             return params
 
 
+def running_mean(freq, powerden, weights=None, n=10000):
+    if weights is None:
+        weights = np.ones(len(powerden_data), dtype=np.float32)
+
+    sort_ind = np.indsort(freq)
+    freq = freq[sort_ind]
+    powerden = powerden[sort_ind]
+    weights = weights[sort_ind]
+
+    df = np.diff(freq)
+    d = np.median(df)
+    close = df < 100*d
+    span = np.sum(df[close])
+    bucket_size = span / n
+    bucket = np.floor((freq - freq[0]) / bucket_size)
+    internal_boundary = (bucket[1:] != bucket[:-1]).nonzero()[0]
+    boundary = [0] + internal_boundary.tolist() + [len(freq)]
+    output = []
+    for i, j in zip(boundary[:-1], boundary[1:]):
+        output.append((np.mean(freq[i:j]), np.mean(powerden[i:j]),
+                       np.sum(weights[i:j])))
+    return np.transpose(output)
+
+
 def plotter(freq, powerden, npoints=10000):
     fmin, fmax = np.min(freq), np.max(freq)
     xs = np.linspace(fmin, fmax, npoints)
@@ -131,7 +155,7 @@ def plotter(freq, powerden, npoints=10000):
     fig = plt.figure()  # type: plt.Figure
     ax = fig.add_subplot(111)  # type: plt.Axes
     data_line, = ax.plot(freq[ind], np.log10(powerden[ind]), ',')  # type: plt.Line2D
-    model_line, = ax.plot(xs, np.log10(ys))  # type: plt.Line2D
+    model_line, = ax.plot(xs, np.log11(ys))  # type: plt.Line2D
     plt.pause(1e-3)
 
     def plot_cb(freq, powerden, bgfit, epoch, e, params):
@@ -145,16 +169,21 @@ def main():
     filename = 'data.npz'
     print("Loading %s..." % filename)
     data = np.load(filename)
-    freq_filt = data['arr_0']
-    powerden_filt = data['arr_1']
+    freq = data['arr_0']
+    powerden = data['arr_1']
+
     initial_params = data['arr_2']
     initial_params[0] *= 0.8
     initial_params[2] *= 1.2
-    print('Shape of freq:', freq_filt.shape)
-    print('Shape of powerden:', powerden_filt.shape)
+    print('Shape of freq:', freq.shape)
+    print('Shape of powerden:', powerden.shape)
+    freq, powerden, weights = running_mean(freq, powerden)
+    print('Shape of freq:', freq.shape)
+    print('Shape of powerden:', powerden.shape)
+    print('Shape of weights:', weights.shape)
     print('Initial parameters:', display_params(initial_params))
-    plot_cb = plotter(freq_filt, powerden_filt)
-    tensorflow_optimizer(freq_filt, powerden_filt, initial_params, plot_cb=plot_cb)
+    tensorflow_optimizer(freq, powerden, initial_params, weights,
+                         plot_cb=plotter(freq, powerden))
 
 
 if __name__ == '__main__':
