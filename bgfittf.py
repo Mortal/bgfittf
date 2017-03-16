@@ -193,7 +193,8 @@ def main():
     initial_params = np.load(params_filename)['arr_2']
     initial_params[0] *= 0.8
     initial_params[2] *= 1.2
-    initial_params.append(0.2)
+    initial_params = np.concatenate(
+        (initial_params, [0.2]))
     print('Shape of freq:', freq.shape)
     print('Shape of powerden:', powerden.shape)
     freq1, powerden1, weights1 = running_median(freq, powerden, weights,
