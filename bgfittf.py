@@ -203,6 +203,9 @@ def main():
     popt2 = tensorflow_optimizer(freq2, powerden2, popt, weights2,
                                  plot_cb=plotter(freq, powerden) if args.nox else None)
     print(popt2)
+    popt3 = tensorflow_optimizer(freq, powerden, popt2,
+                                 plot_cb=plotter(freq, powerden) if args.nox else None)
+    print(popt3)
 
 
 if __name__ == '__main__':
