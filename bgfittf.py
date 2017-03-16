@@ -204,6 +204,11 @@ def main():
     print('Initial parameters:', display_params(initial_params))
     popt = scipy_optimizer(freq1, powerden1, initial_params, weights1,
                            plot_cb=None)
+    plt.plot(freq, powerden, ',')
+    plt.plot(freq1, powerden1)
+    plt.plot(freq1, background_fit(freq1, *popt))
+    plt.loglog()
+    plt.savefig('test.png')
     freq2, powerden2, weights2 = running_median(freq, powerden, weights,
                                                 bins=10000)
     print('Shape of freq:', freq2.shape)
