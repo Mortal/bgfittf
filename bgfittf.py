@@ -1,4 +1,5 @@
 import time
+import argparse
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -174,6 +175,9 @@ def plotter(freq, powerden, npoints=10000):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--nox', action='store_false')
+    args = parser.parse_args()
     filename = 'data.npz'
     print("Loading %s..." % filename)
     data = np.load(filename)
@@ -197,7 +201,7 @@ def main():
     print('Shape of powerden:', powerden2.shape)
     print('Shape of weights:', weights2.shape)
     popt2 = tensorflow_optimizer(freq2, powerden2, popt, weights2,
-                                 plot_cb=plotter(freq, powerden))
+                                 plot_cb=plotter(freq, powerden) if args.nox else None)
     print(popt2)
 
 
