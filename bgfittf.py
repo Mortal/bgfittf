@@ -182,15 +182,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--nox', action='store_false')
     args = parser.parse_args()
-    filename = 'data.npz'
+    filename = 'powerdensity_q1_s4_k801.npz'
     print("Loading %s..." % filename)
-    data = np.load(filename)
-    freq = data['arr_0']
-    powerden = data['arr_1']
+    freq, powerden = np.load(filename)['data'].T
     log_freq_diff = np.diff(np.log(freq))
     weights = np.concatenate((log_freq_diff, [log_freq_diff[-1]]))
 
-    initial_params = data['arr_2']
+    params_filename = 'data.npz'
+    print("Loading initial params from %s..." % params_filename)
+    initial_params = np.load(params_filename)['arr_2']
     initial_params[0] *= 0.8
     initial_params[2] *= 1.2
     initial_params.append(0.2)
