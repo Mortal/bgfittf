@@ -152,7 +152,7 @@ def running_median(freq, powerden, weights=None, bin_size=None, bins=None):
     boundary = [0] + internal_boundary.tolist() + [len(log_freq)]
     output = []
     for i, j in zip(boundary[:-1], boundary[1:]):
-        output.append((np.mean(log_freq[i:j]), np.median(powerden[i:j]),
+        output.append((np.mean(freq[i:j]), np.median(powerden[i:j]),
                        np.sum(weights[i:j])))
     return np.transpose(output)
 
