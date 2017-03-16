@@ -129,7 +129,7 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
             return params
 
 
-def running_mean(freq, powerden, weights=None, n=10000):
+def running_median(freq, powerden, weights=None, bin_size=None, bins=None):
     if weights is None:
         weights = np.ones(len(powerden), dtype=np.float32)
 
@@ -137,18 +137,22 @@ def running_mean(freq, powerden, weights=None, n=10000):
     freq = freq[sort_ind]
     powerden = powerden[sort_ind]
     weights = weights[sort_ind]
+    log_freq = np.log10(freq)
 
-    df = np.diff(freq)
-    d = np.median(df)
-    close = df < 100*d
-    span = np.sum(df[close])
-    bucket_size = span / n
-    bucket = np.floor((freq - freq[0]) / bucket_size)
-    internal_boundary = (bucket[1:] != bucket[:-1]).nonzero()[0]
-    boundary = [0] + internal_boundary.tolist() + [len(freq)]
+    if bin_size is None:
+        if bins is None:
+            bins = 10000
+        df = np.diff(log_freq)
+        d = np.median(df)
+        close = df < 100*d
+        span = np.sum(df[close])
+        bin_size = span / bins
+    bin_index = np.floor((log_freq - log_freq[0]) / bin_size)
+    internal_boundary = (bin_index[1:] != bin_index[:-1]).nonzero()[0]
+    boundary = [0] + internal_boundary.tolist() + [len(log_freq)]
     output = []
     for i, j in zip(boundary[:-1], boundary[1:]):
-        output.append((np.mean(freq[i:j]), np.mean(powerden[i:j]),
+        output.append((np.mean(log_freq[i:j]), np.median(powerden[i:j]),
                        np.sum(weights[i:j])))
     return np.transpose(output)
 
@@ -190,14 +194,14 @@ def main():
     initial_params.append(0.2)
     print('Shape of freq:', freq.shape)
     print('Shape of powerden:', powerden.shape)
-    freq1, powerden1, weights1 = running_mean(freq, powerden, n=1000)
+    freq1, powerden1, weights1 = running_median(freq, powerden, bins=1000)
     print('Shape of freq:', freq1.shape)
     print('Shape of powerden:', powerden1.shape)
     print('Shape of weights:', weights1.shape)
     print('Initial parameters:', display_params(initial_params))
     popt = scipy_optimizer(freq1, powerden1, initial_params, weights1,
                            plot_cb=None)
-    freq2, powerden2, weights2 = running_mean(freq, powerden, n=10000)
+    freq2, powerden2, weights2 = running_median(freq, powerden, bins=10000)
     print('Shape of freq:', freq2.shape)
     print('Shape of powerden:', powerden2.shape)
     print('Shape of weights:', weights2.shape)
