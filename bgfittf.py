@@ -13,15 +13,15 @@ def background_fit_2(nu, sigma_0, tau_0):
     return k1
 
 
-def background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n=0):
+def background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n):
     k1 = background_fit_2(nu, sigma_0, tau_0)
     k2 = background_fit_2(nu, sigma_1, tau_1)
     return P_n + k1 + k2
 
 
 def scipy_optimizer(freq_filt, powerden_filt, z0, data_weights=None, plot_cb=None):
-    def logbackground_fit(nu, sigma_0, tau_0, sigma_1, tau_1):
-        r = background_fit(nu, sigma_0, tau_0, sigma_1, tau_1)
+    def logbackground_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n):
+        r = background_fit(nu, sigma_0, tau_0, sigma_1, tau_1, P_n)
         inval = r <= 0
         r[inval] = 1
         lr = np.log10(r)
@@ -59,8 +59,8 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
         tau_0 = tf.Variable(tf.constant(z0[1], tf.float32))
         sigma_1 = tf.Variable(tf.constant(z0[2], tf.float32))
         tau_1 = tf.Variable(tf.constant(z0[3], tf.float32))
-        initial_P_n = np.exp(np.mean(np.log(powerden_data)))
-        P_n = tf.Variable(tf.constant(initial_P_n, tf.float32))
+        # initial_P_n = np.exp(np.mean(np.log(powerden_data)))
+        P_n = tf.Variable(tf.constant(z0[4], tf.float32))
         # Pass max(tau_limit/2, tau) into background_fit to avoid nan
         bgfit = background_fit(
             freq, sigma_0, tf.maximum(tau_limit/2, tau_0),
@@ -187,6 +187,7 @@ def main():
     initial_params = data['arr_2']
     initial_params[0] *= 0.8
     initial_params[2] *= 1.2
+    initial_params.append(0.2)
     print('Shape of freq:', freq.shape)
     print('Shape of powerden:', powerden.shape)
     freq1, powerden1, weights1 = running_mean(freq, powerden, n=1000)
