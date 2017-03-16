@@ -187,6 +187,8 @@ def main():
     data = np.load(filename)
     freq = data['arr_0']
     powerden = data['arr_1']
+    log_freq_diff = np.diff(np.log(freq))
+    weights = np.concatenate((log_freq_diff, [log_freq_diff[-1]]))
 
     initial_params = data['arr_2']
     initial_params[0] *= 0.8
@@ -194,14 +196,16 @@ def main():
     initial_params.append(0.2)
     print('Shape of freq:', freq.shape)
     print('Shape of powerden:', powerden.shape)
-    freq1, powerden1, weights1 = running_median(freq, powerden, bins=1000)
+    freq1, powerden1, weights1 = running_median(freq, powerden, weights,
+                                                bins=1000)
     print('Shape of freq:', freq1.shape)
     print('Shape of powerden:', powerden1.shape)
     print('Shape of weights:', weights1.shape)
     print('Initial parameters:', display_params(initial_params))
     popt = scipy_optimizer(freq1, powerden1, initial_params, weights1,
                            plot_cb=None)
-    freq2, powerden2, weights2 = running_median(freq, powerden, bins=10000)
+    freq2, powerden2, weights2 = running_median(freq, powerden, weights,
+                                                bins=10000)
     print('Shape of freq:', freq2.shape)
     print('Shape of powerden:', powerden2.shape)
     print('Shape of weights:', weights2.shape)
