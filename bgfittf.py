@@ -136,15 +136,26 @@ def tensorflow_optimizer(freq_data, powerden_data, z0, data_weights=None, learni
 
 
 def running_median(freq, powerden, weights=None, bin_size=None, bins=None):
-    if weights is None:
-        weights = np.ones(len(powerden), dtype=np.float32)
+    if bin_size is not None and bins is not None:
+        raise TypeError('cannot specify both bin_size and bins')
+    freq = np.squeeze(freq)
+    powerden = np.squeeze(powerden)
+    n, = freq.shape
+    n_, = powerden.shape
+    assert n == n_
 
+    if weights is None:
+        weights = np.ones(n, dtype=np.float32)
+
+    # Sort data by frequency
     sort_ind = np.argsort(freq)
     freq = freq[sort_ind]
     powerden = powerden[sort_ind]
     weights = weights[sort_ind]
-    log_freq = np.log10(freq)
 
+    # Compute log of frequencies
+    log_freq = np.log10(freq)
+    # Compute bin_size
     if bin_size is None:
         if bins is None:
             bins = 10000
@@ -155,12 +166,16 @@ def running_median(freq, powerden, weights=None, bin_size=None, bins=None):
         bin_size = span / bins
     bin_index = np.floor((log_freq - log_freq[0]) / bin_size)
     internal_boundary = (bin_index[1:] != bin_index[:-1]).nonzero()[0]
-    boundary = [0] + internal_boundary.tolist() + [len(log_freq)]
-    output = []
+    boundary = [0] + internal_boundary.tolist() + [n]
+
+    bin_freq = []
+    bin_pden = []
+    bin_weight = []
     for i, j in zip(boundary[:-1], boundary[1:]):
-        output.append((np.mean(freq[i:j]), np.median(powerden[i:j]),
-                       np.sum(weights[i:j])))
-    return np.transpose(output)
+        bin_freq.append(np.mean(freq[i:j]))
+        bin_pden.append(np.median(powerden[i:j]))
+        bin_weight.append(np.sum(weights[i:j]))
+    return np.array(bin_freq), np.array(bin_pden), np.array(bin_weight)
 
 
 def plotter(freq, powerden, npoints=10000):
