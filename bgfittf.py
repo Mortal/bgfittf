@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-def background_fit_2(nu, sigma_0, tau_0):
-    k1 = ((4 * sigma_0 ** 2 * tau_0) /
-          (1 + (2 * np.pi * nu * tau_0) ** 2 +
-           (2 * np.pi * nu * tau_0) ** 4))
+def background_fit_2(nu, sigma, tau, pi=np.pi):
+    k1 = ((4 * sigma ** 2 * tau) /
+          (1 + (2 * pi * nu * tau) ** 2 +
+           (2 * pi * nu * tau) ** 4))
     return k1
 
 
