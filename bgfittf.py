@@ -35,13 +35,19 @@ def scipy_optimizer(freq_filt, powerden_filt, z0, data_weights=None, plot_cb=Non
 
 
 def display_params(params):
-    variable_names = [
-        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}',
-        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}',
-        '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}',
-        '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ONE}',
-        'P_n',
-    ]
+    if len(params) == 2:
+        variable_names = [
+            '\N{GREEK SMALL LETTER SIGMA}',
+            '\N{GREEK SMALL LETTER TAU}',
+        ]
+    else:
+        variable_names = [
+            '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ZERO}',
+            '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ZERO}',
+            '\N{GREEK SMALL LETTER SIGMA}\N{SUBSCRIPT ONE}',
+            '\N{GREEK SMALL LETTER TAU}\N{SUBSCRIPT ONE}',
+            'P_n',
+        ]
     kvs = zip(variable_names, params)
     return ' '.join('%s=%+.3e' % kv for kv in kvs)
 
